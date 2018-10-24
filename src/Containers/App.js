@@ -2,6 +2,10 @@ import React, { PureComponent } from 'react';
 import classes from './App.css';
 import Persons from '../Components/Persons/Persons';
 import Cockpit from  '../Components/Cockpit/Cockpit';
+import Aux from '../hoc/Auxiliary';
+import withClass from '../hoc/withClass';
+
+export const AuthContext = React.createContext(false);
 
 class App extends PureComponent {
   constructor(props) {
@@ -14,7 +18,9 @@ class App extends PureComponent {
         { id: 'as', name: 'Stephanie', age: 26}
       ],
       otherState: 'some other value',
-      showPersons: false
+      showPersons: false,
+      toggleClicked: 0,
+      authenticated: false
     }
   }
 
@@ -34,6 +40,16 @@ class App extends PureComponent {
 
   componentWillUpdate(nextProps,nextState) {
       console.log('[UPDATE] App.js inside componentWillUpdate', nextProps, nextState);
+  }
+
+  static getDerivedStateFromProps(nextProps,prevState) {
+    console.log('[UPDATE] App.js inside getDerivedStateFromProps', nextProps, prevState);
+
+    return prevState;
+  }
+
+  getSnapshotBeforeUpdate() {
+    console.log('[UPDATE] App.js inside getSnapshotBeforeUpdate');
   }
 
   componentDidUpdate() {
@@ -73,7 +89,16 @@ class App extends PureComponent {
   
   togglePersonsHandler = () => {
     const doesShow = this.state.showPersons;
-    this.setState({showPersons: !doesShow});
+    this.setState( (prevState, props) => {
+      return {
+        showPersons: !doesShow,
+        toggleClicked: prevState.toggleClicked + 1
+      }
+    });
+  }
+
+  loginHandler = () => {
+    this.setState({authenticated: true});
   }
 
   render() {
@@ -88,17 +113,18 @@ class App extends PureComponent {
     }
 
     return (
-        <div className={classes.App}>
+      <Aux>
           <button onClick={()=>{this.setState({showPersons: true})}}>Show Persons</button>
           <Cockpit
             appTitle = {this.props.title}
             showPersons = {this.state.showPersons}
             persons = {this.state.persons}
-            clicked = {this.togglePersonsHandler} />
-          {persons}
-        </div>
+            clicked = {this.togglePersonsHandler}
+            login = {this.loginHandler} />
+            <AuthContext.Provider value={this.state.authenticated}>{persons}</AuthContext.Provider>
+      </Aux>
     );
   }
 }
 
-export default App;
+export default withClass(App, classes.App);
